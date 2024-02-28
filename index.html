@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link rel="stylesheet" href="index.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+    <header>
+        <h1>Gonçalves Dias MA</h1>
+    </header>
+    
+    <nav>
+        <a href="#" class="nav-link">Votação</a>
+    </nav>
+    
+    <section>
+        <!-- Conteúdo da página vai aqui -->
+        <div class="button-container">
+            <button onclick="showModal('Button 1', 1)" class="vote-button">Romeu</button>
+            <button onclick="showModal('Button 2', 2)" class="vote-button">Marcelo</button>
+        </div>
+    </section>
+    
+    <!-- Modal for confirmation -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <p>Confirma sua escolha?</p>
+            <button class="confirm" onclick="confirmChoice()">Confirmar</button>
+            <button class="deny" onclick="denyChoice()">Cancelar</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Página Elegante. Feito por @ridy.script.</p>
+    </footer>
+    
+    <script src="index.js"></script>
+
+    <script>
+        // Retrieve vote counts from localStorage or initialize if not present
+        let voteCounts = JSON.parse(localStorage.getItem('voteCounts')) || {
+            'Button 1': 0,
+            'Button 2': 0
+        };
+
+        // Check if the user has voted in this session
+        let hasVoted = localStorage.getItem('hasVoted') === 'true';
+
+        function showModal(buttonText, buttonNumber) {
+            if (!hasVoted) {
+                var modal = document.getElementById('confirmationModal');
+                modal.style.display = 'flex';
+                document.querySelector('.modal-content p').textContent = `Você confirma ser voto${buttonNumber}?`;
+            } else {
+                alert('Você já votou.');
+            }
+        }
+
+        function confirmChoice() {
+            if (!hasVoted) {
+                var modalContent = document.querySelector('.modal-content');
+                modalContent.innerHTML = '<p>Obrigado pela sua contribuição!</p>';
+                setTimeout(closeAndResetModal, 2000);
+
+                voteCounts[getButtonTextFromModalContent()]++;
+                console.log('Vote counts:', voteCounts);
+
+                // Save updated vote counts to localStorage
+                localStorage.setItem('voteCounts', JSON.stringify(voteCounts));
+
+                // Set a flag indicating that the user has voted
+                localStorage.setItem('hasVoted', 'true');
+
+                hasVoted = true;
+            }
+        }
+
+        function denyChoice() {
+            alert('Escolha negada');
+            closeAndResetModal();
+        }
+
+        function closeAndResetModal() {
+            var modal = document.getElementById('confirmationModal');
+            modal.style.display = 'none';
+            var originalContent = '<p>Confirmar sua escolha?</p>' +
+                                 '<button class="confirm" onclick="confirmChoice()">Confirm</button>' +
+                                 '<button class="deny" onclick="denyChoice()">Deny</button>';
+            document.querySelector('.modal-content').innerHTML = originalContent;
+        }
+
+        function getButtonTextFromModalContent() {
+            return document.querySelector('.modal-content p').textContent.split(' ')[3];
+        }
+    </script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #chat-container {
+            width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+
+        #message-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+        }
+
+        #message-input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #name-input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        #send-button {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <ul id="message-list"></ul>
+        <input type="text" id="name-input" placeholder="Seu Nome">
+        <input type="text" id="message-input" placeholder="Sua mensagem...">
+        <button id="send-button" onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadMessages();
+        });
+
+        function sendMessage() {
+            var nameInput = document.getElementById('name-input');
+            var messageInput = document.getElementById('message-input');
+            var messageList = document.getElementById('message-list');
+
+            if (nameInput.value.trim() === '' || messageInput.value.trim() === '') {
+                alert("Digite seu nome primeiro.");
+                return;
+            }
+
+            // Limit the number of messages per person to 10
+            if (getUserMessageCount(nameInput.value) >= 10) {
+                // If user reached the message limit, alert or handle accordingly
+                alert("Relaxa aí meu broder (10 messages max por usuário).");
+                return;
+            }
+
+            var message = document.createElement('li');
+            message.textContent = `${nameInput.value}: ${messageInput.value}`;
+            messageList.appendChild(message);
+
+            saveMessages();
+
+            nameInput.value = '';
+            messageInput.value = '';
+        }
+
+        function saveMessages() {
+            var messageList = document.getElementById('message-list');
+            var messages = [];
+
+            for (var i = 0; i < messageList.children.length; i++) {
+                messages.push(messageList.children[i].textContent);
+            }
+
+            localStorage.setItem('chatMessages', JSON.stringify(messages));
+        }
+
+        function loadMessages() {
+            var messageList = document.getElementById('message-list');
+            var savedMessages = localStorage.getItem('chatMessages');
+
+            if (savedMessages) {
+                var messages = JSON.parse(savedMessages);
+
+                for (var i = 0; i < messages.length; i++) {
+                    var message = document.createElement('li');
+                    message.textContent = messages[i];
+                    messageList.appendChild(message);
+                }
+            }
+        }
+
+        function getUserMessageCount(userName) {
+            // This function returns the current user's message count.
+            // For simplicity, we're using a constant value in this example.
+            // In a real application, you would associate messages with user IDs.
+            var messageList = document.getElementById('message-list');
+            var userMessages = Array.from(messageList.children)
+                .filter(message => message.textContent.includes(userName));
+            return userMessages.length;
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clickable Button Example</title>
+    <style>
+        /* Style for the button */
+        #resultButton {
+            position: fixed;
+            top: 10px; /* Adjust the top position as needed */
+            left: 10px; /* Adjust the left position as needed */
+            padding: 10px;
+            background-color: #e74c3c; /* Faint red color */
+            color: #fff; /* Text color */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Style for the button when hovered */
+        #resultButton:hover {
+            background-color: #c0392b; /* Darker red color on hover */
+        }
+    </style>
+</head>
+<body><!DOCTYPE html>
+    <html lang="pt-br">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+        }
+    
+        #resultado-btn {
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          background-color: #ff0000; /* Vermelho */
+          color: #ffffff; /* Texto branco para contrastar */
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          text-decoration: none;
+          font-size: 16px;
+        }
+      </style>
+    </head>
+    <body>
+    
+      <!-- Botão de Resultado -->
+      <a href="resultado.html" id="resultado-btn">Resultado</a>
+    
+    </body>
+    </html>
+    
+
+
